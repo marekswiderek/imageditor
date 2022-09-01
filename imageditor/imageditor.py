@@ -1,8 +1,15 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 import sys
-from editor.editor import open_image_as_ndarray, ndarray_to_image
+import numpy as np 
+from editor.editor import save_ndarray_as_image, convert_pixmap_to_ndarray
+import traceback
 
 class ProgramWindow(object):
+	def __init__(self):
+		self.image = None
+		self.image_ndarray = None
+		self.image_ndarray_backup = None
+
 	def setupUi(self, MainWindow):
 		MainWindow.setObjectName("MainWindow")
 		MainWindow.setEnabled(True)
@@ -17,7 +24,7 @@ class ProgramWindow(object):
 		self.imagePreview = QtWidgets.QLabel(self.centralWidget)
 		self.imagePreview.setGeometry(QtCore.QRect(10, 10, 530, 530))
 		self.imagePreview.setText("")
-		self.imagePreview.setPixmap(QtGui.QPixmap("./test.png"))
+		#self.imagePreview.setPixmap(QtGui.QPixmap("./test.png"))
 		self.imagePreview.setScaledContents(True)
 		self.imagePreview.setObjectName("imagePreview")
 		self.rgbBox = QtWidgets.QGroupBox(self.centralWidget)
@@ -84,6 +91,10 @@ class ProgramWindow(object):
 
 		self.retranslateUi(MainWindow)
 		QtCore.QMetaObject.connectSlotsByName(MainWindow)
+		
+		#map functions to buttons on-click
+		self.loadImageButton.clicked.connect(self.load_image)
+		self.saveImageButton.clicked.connect(self.save_image)
 
 	def retranslateUi(self, MainWindow):
 		_translate = QtCore.QCoreApplication.translate
@@ -98,19 +109,33 @@ class ProgramWindow(object):
 		self.saveImageButton.setText(_translate("MainWindow", "Save image"))
 		self.filterBox.setTitle(_translate("MainWindow", "Filters"))
 		self.filterButton.setText(_translate("MainWindow", "Add filter"))
-
-
-if __name__ == "__main__":
-	image = open_image_as_ndarray("test.png")
-	print(type(image))
-	image=ndarray_to_image(image)
 	
+	def load_image(self):
+		#show choose file dialog window and load image
+		try:
+			image_path = QtWidgets.QFileDialog.getOpenFileName()
+			self.image = QtGui.QPixmap(image_path[0])
+			self.imagePreview.setPixmap(self.image)
+			#image variable for editing, image_backup variable for "reset" feature
+			self.image_ndarray = self.image_ndarray_backup =  convert_pixmap_to_ndarray(self.image)
+		except Exception:
+			traceback.print_exc()
+			
+	def save_image(self):
+		try:
+			image_path = QtWidgets.QFileDialog.getSaveFileName()[0]
+			save_ndarray_as_image(self.image_ndarray, image_path)
+		except Exception:
+			traceback.print_exc()
+
+		
+if __name__ == "__main__":
 	app = QtWidgets.QApplication(sys.argv)
 	MainWindow = QtWidgets.QMainWindow()
 	ProgramWindow = ProgramWindow()
 	ProgramWindow.setupUi(MainWindow)
 	MainWindow.show()
-
+	
 	sys.exit(app.exec_())
 
 
