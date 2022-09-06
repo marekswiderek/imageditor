@@ -91,7 +91,15 @@ class ProgramWindow(object):
 		self.statusbar.setEnabled(False)
 		self.statusbar.setObjectName("statusbar")
 		MainWindow.setStatusBar(self.statusbar)
-
+		
+		self.resetBox = QtWidgets.QGroupBox(self.centralWidget)
+		self.resetBox.setGeometry(QtCore.QRect(550, 330, 130, 40))
+		self.resetBox.setAutoFillBackground(True)
+		self.resetBox.setFlat(True)
+		self.resetButton = QtWidgets.QPushButton(self.resetBox)
+		self.resetButton.setGeometry(QtCore.QRect(10,10,111,23))
+		self.resetButton.setObjectName("resetButton")
+		
 		self.retranslateUi(MainWindow)
 		QtCore.QMetaObject.connectSlotsByName(MainWindow)
 		
@@ -99,7 +107,8 @@ class ProgramWindow(object):
 		self.loadImageButton.clicked.connect(self.load_image)
 		self.saveImageButton.clicked.connect(self.save_image)
 		self.filterButton.clicked.connect(self.add_filter)
-
+		self.resetButton.clicked.connect(self.reset_image)
+		
 	def retranslateUi(self, MainWindow):
 		_translate = QtCore.QCoreApplication.translate
 		MainWindow.setWindowTitle(_translate("MainWindow", "Imageditor"))
@@ -113,7 +122,8 @@ class ProgramWindow(object):
 		self.saveImageButton.setText(_translate("MainWindow", "Save image"))
 		self.filterBox.setTitle(_translate("MainWindow", "Filters"))
 		self.filterButton.setText(_translate("MainWindow", "Add filter"))
-	
+		self.resetButton.setText(_translate("MainWindow", "RESET"))
+
 	def load_image(self):
 		#show choose file dialog window and load image
 		try:
@@ -137,8 +147,11 @@ class ProgramWindow(object):
 		self.imagePreview.setPixmap(QtGui.QPixmap(self.image))
 	
 	def add_filter(self):
-		#self.image_ndarray = rgb_to_grayscale(self.image_ndarray)
 		self.image_ndarray = self.filters_dict[str(self.filterComboBox.currentText())](self.image_ndarray)
+		self.reload_image()
+
+	def reset_image(self):
+		self.image_ndarray = self.image_ndarray_backup.copy()
 		self.reload_image()
 	
 if __name__ == "__main__":
