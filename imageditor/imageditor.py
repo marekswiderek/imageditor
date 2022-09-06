@@ -1,7 +1,7 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 import sys
 import numpy as np 
-from editor.editor import save_ndarray_as_image, convert_pixmap_to_ndarray
+from editor.editor import save_ndarray_as_image, convert_pixmap_to_ndarray, convert_ndarray_to_pixmap, rgb_to_grayscale, negative_image, only_red_channel, only_green_channel, only_blue_channel
 import traceback
 
 class ProgramWindow(object):
@@ -9,6 +9,7 @@ class ProgramWindow(object):
 		self.image = None
 		self.image_ndarray = None
 		self.image_ndarray_backup = None
+		self.filters_dict = {'Grayscale': rgb_to_grayscale, 'Negative': negative_image, 'RedOnly': only_red_channel, 'GreenOnly': only_green_channel, 'BlueOnly': only_blue_channel}
 
 	def setupUi(self, MainWindow):
 		MainWindow.setObjectName("MainWindow")
@@ -78,6 +79,8 @@ class ProgramWindow(object):
 		self.filterBox.setFlat(True)
 		self.filterBox.setObjectName("filterBox")
 		self.filterComboBox = QtWidgets.QComboBox(self.filterBox)
+		self.filterComboBox.clear()
+		self.filterComboBox.addItems(self.filters_dict.keys())
 		self.filterComboBox.setGeometry(QtCore.QRect(10, 20, 111, 22))
 		self.filterComboBox.setObjectName("filterComboBox")
 		self.filterButton = QtWidgets.QPushButton(self.filterBox)
@@ -95,6 +98,7 @@ class ProgramWindow(object):
 		#map functions to buttons on-click
 		self.loadImageButton.clicked.connect(self.load_image)
 		self.saveImageButton.clicked.connect(self.save_image)
+		self.filterButton.clicked.connect(self.add_filter)
 
 	def retranslateUi(self, MainWindow):
 		_translate = QtCore.QCoreApplication.translate
@@ -128,7 +132,15 @@ class ProgramWindow(object):
 		except Exception:
 			traceback.print_exc()
 
-		
+	def reload_image(self):
+		self.image = convert_ndarray_to_pixmap(self.image_ndarray)
+		self.imagePreview.setPixmap(QtGui.QPixmap(self.image))
+	
+	def add_filter(self):
+		#self.image_ndarray = rgb_to_grayscale(self.image_ndarray)
+		self.image_ndarray = self.filters_dict[str(self.filterComboBox.currentText())](self.image_ndarray)
+		self.reload_image()
+	
 if __name__ == "__main__":
 	app = QtWidgets.QApplication(sys.argv)
 	MainWindow = QtWidgets.QMainWindow()
