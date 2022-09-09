@@ -1,7 +1,7 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 import sys
 import numpy as np 
-from editor.editor import save_ndarray_as_image, convert_pixmap_to_ndarray, convert_ndarray_to_pixmap, rgb_to_grayscale, negative_image, only_red_channel, only_green_channel, only_blue_channel
+from editor.editor import save_ndarray_as_image, convert_ndarray_to_pixmap, rgb_to_grayscale, negative_image, only_red_channel, only_green_channel, only_blue_channel, remove_rgb_above_thresholds, open_image_as_ndarray
 import traceback
 
 class ProgramWindow(object):
@@ -39,16 +39,19 @@ class ProgramWindow(object):
 		self.rBox.setGeometry(QtCore.QRect(10, 20, 52, 22))
 		self.rBox.setButtonSymbols(QtWidgets.QAbstractSpinBox.UpDownArrows)
 		self.rBox.setMaximum(255)
+		self.rBox.setValue(255)
 		self.rBox.setObjectName("rBox")
 		self.gBox = QtWidgets.QSpinBox(self.rgbBox)
 		self.gBox.setGeometry(QtCore.QRect(10, 40, 52, 22))
 		self.gBox.setButtonSymbols(QtWidgets.QAbstractSpinBox.UpDownArrows)
 		self.gBox.setMaximum(255)
+		self.gBox.setValue(255)
 		self.gBox.setObjectName("gBox")
 		self.bBox = QtWidgets.QSpinBox(self.rgbBox)
 		self.bBox.setGeometry(QtCore.QRect(10, 60, 52, 22))
 		self.bBox.setButtonSymbols(QtWidgets.QAbstractSpinBox.UpDownArrows)
 		self.bBox.setMaximum(255)
+		self.bBox.setValue(255)
 		self.bBox.setObjectName("bBox")
 		self.rLabel = QtWidgets.QLabel(self.rgbBox)
 		self.rLabel.setGeometry(QtCore.QRect(70, 20, 47, 22))
@@ -108,6 +111,7 @@ class ProgramWindow(object):
 		self.saveImageButton.clicked.connect(self.save_image)
 		self.filterButton.clicked.connect(self.add_filter)
 		self.resetButton.clicked.connect(self.reset_image)
+		self.manipulateButton.clicked.connect(self.remove_rgb_values_ht)
 		
 	def retranslateUi(self, MainWindow):
 		_translate = QtCore.QCoreApplication.translate
@@ -116,7 +120,7 @@ class ProgramWindow(object):
 		self.rLabel.setText(_translate("MainWindow", "R"))
 		self.gLabel.setText(_translate("MainWindow", "G"))
 		self.bLabel.setText(_translate("MainWindow", "B"))
-		self.manipulateButton.setText(_translate("MainWindow", "Manipulate"))
+		self.manipulateButton.setText(_translate("MainWindow", "Remove"))
 		self.navBox.setTitle(_translate("MainWindow", "Navigation"))
 		self.loadImageButton.setText(_translate("MainWindow", "Load image"))
 		self.saveImageButton.setText(_translate("MainWindow", "Save image"))
@@ -131,7 +135,7 @@ class ProgramWindow(object):
 			self.image = QtGui.QPixmap(image_path[0])
 			self.imagePreview.setPixmap(self.image)
 			#image variable for editing, image_backup variable for "reset" feature
-			self.image_ndarray = self.image_ndarray_backup =  convert_pixmap_to_ndarray(self.image)
+			self.image_ndarray = self.image_ndarray_backup = open_image_as_ndarray(image_path[0])
 		except Exception:
 			traceback.print_exc()
 			
@@ -154,6 +158,10 @@ class ProgramWindow(object):
 		self.image_ndarray = self.image_ndarray_backup.copy()
 		self.reload_image()
 	
+	def remove_rgb_values_ht(self):
+		self.image_ndarray = remove_rgb_above_thresholds(self.image_ndarray, self.rBox.value(), self.gBox.value(), self.bBox.value())
+		self.reload_image()
+
 if __name__ == "__main__":
 	app = QtWidgets.QApplication(sys.argv)
 	MainWindow = QtWidgets.QMainWindow()
